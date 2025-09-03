@@ -25,7 +25,3 @@ let out = "";
 for (const ch of "thuowngs") out = engine.processWithKey(out, ch);
 console.log(out); // "thương"
 ```
-
-## License
-
-MIT for the TypeScript port. `legacy/avim.js` preserves its original header and terms.
