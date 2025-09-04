@@ -1,7 +1,7 @@
 {
-  "name": "anvim-ts",
-  "version": "0.1.0",
-  "description": "AVIM-compatible Vietnamese input engine in TypeScript",
+  "name": "anvim",
+  "version": "0.1.1",
+  "description": "ANVIM - A New Vietnamese Input Method (AVIM-compatible Vietnamese input engine in TypeScript)",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -17,7 +17,9 @@
   "files": ["dist", "legacy/avim.js", "LICENSE", "README.md"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepublishOnly": "npm run build"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "prepublishOnly": "yarn build"
   },
   "license": "MIT",
   "repository": {
@@ -27,6 +29,9 @@
   "author": "Anh Nguyen <anhngw@gmail.com>",
   "keywords": ["vietnamese", "input-method", "avim", "telex", "vni", "viqr"],
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2"
   }
 }

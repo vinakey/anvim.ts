@@ -1,6 +1,6 @@
 /**
- * ANVIM - Direct TypeScript migration of AVIM.js
- * Vietnamese Input Method Engine
+ * ANVIM - A New Vietnamese Input Method
+ * Direct TypeScript migration of AVIM.js (A Vietnamese Input Method)
  *
  * Based on AVIM JavaScript Vietnamese Input Method by Hieu Tran Dang
  * Migrated to TypeScript while preserving exact logic and behavior
@@ -744,79 +744,14 @@ export class AnvimEngine {
     if (!word || word.length === 0) return word;
     if (this.config.onOff === 0) return word;
 
-    const telex = "D,A,E,O,W,W".split(",");
-    const vni = "9,6,6,6,7,8".split(",");
-    const viqr = "D,^,^,^,+,(".split(",");
-    const viqr2 = "D,^,^,^,*,(".split(",");
-
-    let uni: string[] = [];
-    let uni2: string[] = [];
-    let uni3: string[] = [];
-    let uni4: string[] = [];
-
-    if (this.config.method == 0) {
-      // AUTO
-      const arr: string[][] = [];
-      const check = [true, true, true, true];
-      const value1 = [telex, vni, viqr, viqr2];
-
-      for (let a = 0; a < check.length; a++) {
-        if (check[a]) arr[arr.length] = value1[a];
-      }
-      for (let a = 0; a < arr.length; a++) {
-        if (a === 0) uni = arr[a];
-        if (a === 1) uni2 = arr[a];
-        if (a === 2) uni3 = arr[a];
-        if (a === 3) uni4 = arr[a];
-      }
-      if (!uni.length) return word;
-    } else if (this.config.method == 1) {
-      uni = telex;
-    } else if (this.config.method == 2) {
-      uni = vni;
-    } else if (this.config.method == 3) {
-      uni = viqr;
-    } else if (this.config.method == 4) {
-      uni = viqr2;
+    // Use the same character-by-character approach as anvim function
+    // but using processWithKey which has the correct logic
+    let result = '';
+    for (let i = 0; i < word.length; i++) {
+      result = this.processWithKey(result, word[i]);
     }
 
-    let currentWord = word;
-
-    for (let i = 1; i <= currentWord.length; i++) {
-      const w = currentWord.substring(0, i);
-      const k = currentWord.substring(i - 1, i);
-      let processed = this.main(w, k, uni);
-
-      if (processed !== w) {
-        currentWord = processed + currentWord.substring(i);
-        continue;
-      }
-      if (this.config.method === 0) {
-        if (uni2.length) {
-          processed = this.main(w, k, uni2);
-          if (processed !== w) {
-            currentWord = processed + currentWord.substring(i);
-            continue;
-          }
-        }
-        if (uni3.length) {
-          processed = this.main(w, k, uni3);
-          if (processed !== w) {
-            currentWord = processed + currentWord.substring(i);
-            continue;
-          }
-        }
-        if (uni4.length) {
-          processed = this.main(w, k, uni4);
-          if (processed !== w) {
-            currentWord = processed + currentWord.substring(i);
-            continue;
-          }
-        }
-      }
-    }
-
-    return currentWord;
+    return result;
   }
 
   /**

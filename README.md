@@ -1,6 +1,8 @@
-# anvim-ts
+# anvim
 
-AVIM-compatible Vietnamese input engine (TypeScript)
+**ANVIM** - **A** **N**ew **V**ietnamese **I**nput **M**ethod
+
+A modern TypeScript evolution of AVIM (A Vietnamese Input Method), maintaining full compatibility while adding improvements and type safety.
 
 - `src/anvim.ts`: TypeScript port (ANVIM)
 - `legacy/avim.js`: Original AVIM JavaScript by Hieu Tran Dang (header retained)
@@ -8,20 +10,54 @@ AVIM-compatible Vietnamese input engine (TypeScript)
 ## Install
 
 ```bash
-npm i anvim-ts
+npm i anvim
 ```
 
 ## Usage
 
-Typed transform:
+### Basic Usage
+
+The simplest way to convert Vietnamese text is using the default `anvim` function:
 
 ```ts
-import anvim, { AnvimEngine } from "anvim-ts";
+import anvim from "anvim";
 
-console.log(anvim("vieetj")); // "việt"
+// TELEX input method (default)
+console.log(anvim("xin chaof"));        // "xin chào"
+console.log(anvim("tooi laf sinh vien"));// "tôi là sinh viên"
+console.log(anvim("Vieejt Nam"));       // "Việt Nam"
+console.log(anvim("ddepj"));            // "đẹp"
+console.log(anvim("hocj"));             // "học"
+```
+
+### Advanced Usage with AnvimEngine
+
+For more control, use the `AnvimEngine` class:
+
+```ts
+import { AnvimEngine } from "anvim";
 
 const engine = new AnvimEngine();
-let out = "";
-for (const ch of "thuowngs") out = engine.processWithKey(out, ch);
-console.log(out); // "thương"
+
+// Real-time typing simulation
+let result = "";
+for (const char of "thuowng") {
+  result = engine.processWithKey(result, char);
+  console.log(`Typed '${char}': ${result}`);
+}
+// Output: "thương"
+
+// Process entire words
+console.log(engine.processWord("tooi"));  // "tôi"
+console.log(engine.processWord("chaof")); // "chào"
+```
+
+### Input Methods
+
+```ts
+// Different input methods
+engine.setMethodByString("TELEX");  // tooi → tôi
+engine.setMethodByString("VNI");    // to5i → tôi  
+engine.setMethodByString("VIQR");   // to^'i → tối
+engine.setMethodByString("AUTO");   // auto-detect
 ```
