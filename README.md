@@ -24,9 +24,8 @@ import anvim from "anvim";
 
 // TELEX input method (default)
 console.log(anvim("xin chaof"));        // "xin chào"
-console.log(anvim("tooi laf sinh vien"));// "tôi là sinh viên"
-console.log(anvim("Vieejt Nam"));       // "Việt Nam"
-console.log(anvim("ddepj"));            // "đẹp"
+console.log(anvim("toi yeu Vieejt Nam"));       // "tôi yêu Việt Nam"
+console.log(anvim("gox tieengs vieetj thaatj down gianr"));            // "gõ tiếng việt thật đơn giản"
 console.log(anvim("hocj"));             // "học"
 ```
 
