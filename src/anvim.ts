@@ -256,6 +256,12 @@ export class AnvimEngine {
     if ((method == 3 || method == 4) && w.slice(w.length - 1, w.length) == "\\")
       return [1, k.charCodeAt(0)];
 
+    // Debug logging for problematic cases
+    const isDebug = (w === "ye" || w === "tuye") && (k === "j" || k === "s");
+    if (isDebug) {
+      console.log(`\n=== DEBUG findC for "${w}" + "${k}" ===`);
+    }
+
     let str = "";
     let res: any;
     let cc = "";
@@ -416,18 +422,45 @@ export class AnvimEngine {
 
     if (res) return res;
 
-    if (c == 1 || uk == this.Z) return vowA[0];
-    else if (c == 2) {
+    if (isDebug) {
+      console.log(`Vowel count c = ${c}, vowA = [${vowA}]`);
+      console.log(`uk = "${uk}", this.Z = "${this.Z}"`);
+    }
+
+    if (c == 1 || uk == this.Z) {
+      if (isDebug)
+        console.log(
+          "Taking path: c == 1 || uk == this.Z, returning vowA[0] =",
+          vowA[0],
+        );
+      return vowA[0];
+    } else if (c == 2) {
       let v = 2;
 
       if (w.slice(w.length - 1) == " ") v = 3;
       const ttt = this.up(w.slice(w.length - v, w.length));
 
+      if (isDebug) {
+        console.log(`Taking path: c == 2`);
+        console.log(`ttt = "${ttt}" (last ${v} chars of "${w}")`);
+        console.log(`oldAccent = ${this.config.oldAccent}`);
+      }
+
       if (
         this.config.oldAccent == 0 &&
         (ttt == "UY" || ttt == "OA" || ttt == "OE")
-      )
+      ) {
+        if (isDebug)
+          console.log("Taking UY/OA/OE rule, returning vowA[0] =", vowA[0]);
         return vowA[0];
+      }
+
+      // For YE combinations, tone goes on E (second vowel)
+      if (this.config.oldAccent == 0 && ttt == "YE") {
+        if (isDebug)
+          console.log("Taking YE rule, returning vowA[1] =", vowA[1]);
+        return vowA[1];
+      }
 
       let c2 = 0;
       let fdconsonant: boolean;
@@ -455,10 +488,30 @@ export class AnvimEngine {
         }
       }
 
-      if (c2 == 1 || c2 == 2) return vowA[0];
-      else return vowA[1];
-    } else if (c == 3) return vowA[1];
-    else return false;
+      if (isDebug) {
+        console.log(`Consonant count c2 = ${c2}`);
+      }
+
+      if (c2 == 1 || c2 == 2) {
+        if (isDebug)
+          console.log(
+            "Taking c2 == 1 || c2 == 2, returning vowA[0] =",
+            vowA[0],
+          );
+        return vowA[0];
+      } else {
+        if (isDebug)
+          console.log("Taking else branch, returning vowA[1] =", vowA[1]);
+        return vowA[1];
+      }
+    } else if (c == 3) {
+      if (isDebug)
+        console.log("Taking path: c == 3, returning vowA[1] =", vowA[1]);
+      return vowA[1];
+    } else {
+      if (isDebug) console.log("Taking path: else, returning false");
+      return false;
+    }
   }
 
   /**
@@ -563,6 +616,58 @@ export class AnvimEngine {
     }
 
     return w;
+  }
+
+  /** Determine which tone key (S/F/R/X/J) is currently applied in word w */
+  private detectToneKey(w: string): string | null {
+    const keys = [this.S, this.F, this.R, this.X, this.J];
+
+    for (const key of keys) {
+      const codes = this.retKC(key);
+
+      for (let i = 0; i < w.length; i++) {
+        const code = w.charCodeAt(i);
+
+        for (let j = 0; j < codes.length; j++) {
+          if (codes[j] === code) return key;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /** Normalize tone placement within the last word by reapplying the detected tone
+   *  after removing existing tone marks. This leverages the original findC logic,
+   *  avoiding any hard-coded triphthong lists.
+   */
+  private normalizeTonePlacement(input: string): string {
+    // Determine the last word boundaries (simple whitespace split)
+    let idx = input.length - 1;
+
+    while (
+      idx >= 0 &&
+      input[idx] !== " " &&
+      input[idx] !== "\n" &&
+      input[idx] !== "\t"
+    )
+      idx--;
+
+    const start = idx + 1;
+    const prefix = input.slice(0, start);
+    const word = input.slice(start);
+
+    if (!word) return input;
+
+    const toneKey = this.detectToneKey(word);
+
+    if (!toneKey) return input;
+
+    // Remove tone marks and reapply using sr so findC can choose correct vowel
+    const withoutTone = this.unV(word);
+    const reapplied = this.sr(withoutTone, toneKey);
+
+    return prefix + reapplied;
   }
 
   /**
@@ -739,6 +844,39 @@ export class AnvimEngine {
   // =====================
   // Public API - word/keystroke processing
   // =====================
+  /** Flush a collected word using a fresh engine (avoid cross-word state). */
+  private flushWord(word: string): string {
+    if (!word) return "";
+    const engine = new AnvimEngine({ ...this.config });
+    return engine.processWord(word);
+  }
+
+  /** Process full text by splitting on spaces and flushing per word. */
+  processText(input: string): string {
+    if (input.length === 0) return input;
+
+    let out = "";
+    let word = "";
+
+    const flush = () => {
+      if (!word) return;
+      out += this.flushWord(word);
+      word = "";
+    };
+
+    for (let i = 0; i < input.length; i++) {
+      const ch = input[i];
+      if (ch === " ") {
+        flush();
+        out += " ";
+      } else {
+        word += ch;
+      }
+    }
+
+    flush();
+    return out;
+  }
   /** Process a full word by simulating keystrokes for each character. */
   processWord(word: string): string {
     if (!word || word.length === 0) return word;
@@ -746,7 +884,7 @@ export class AnvimEngine {
 
     // Use the same character-by-character approach as anvim function
     // but using processWithKey which has the correct logic
-    let result = '';
+    let result = "";
     for (let i = 0; i < word.length; i++) {
       result = this.processWithKey(result, word[i]);
     }
@@ -1005,16 +1143,3 @@ export class AnvimEngine {
     return this.config.onOff === 1;
   }
 }
-
-export default function anvim(input: string): string {
-  const engine = new AnvimEngine();
-  let out = "";
-
-  for (let i = 0; i < input.length; i++) {
-    out = engine.processWithKey(out, input[i]);
-  }
-
-  return out;
-}
-
-export const anvimEngine = new AnvimEngine();

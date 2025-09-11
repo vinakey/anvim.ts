@@ -47,7 +47,7 @@ for (const char of "thuowng") {
 // Output: "thương"
 
 // Process entire words
-console.log(engine.processWord("tooi"));  // "tôi"
+console.log(engine.processWord("tooi")); // "tôi"
 console.log(engine.processWord("chaof")); // "chào"
 ```
 
@@ -55,8 +55,8 @@ console.log(engine.processWord("chaof")); // "chào"
 
 ```ts
 // Different input methods
-engine.setMethodByString("TELEX");  // tooi → tôi
-engine.setMethodByString("VNI");    // to5i → tôi  
-engine.setMethodByString("VIQR");   // to^'i → tối
-engine.setMethodByString("AUTO");   // auto-detect
+engine.setMethodByString("TELEX"); // tooi → tôi
+engine.setMethodByString("VNI"); // to5i → tôi
+engine.setMethodByString("VIQR"); // to^'i → tối
+engine.setMethodByString("AUTO"); // auto-detect
 ```
